@@ -120,8 +120,9 @@ async function main() {
   await waitForServer(serverPort).catch(() => {})
 
   db.init(getDataDir())
+  process.env.CODEOS_PORT = String(serverPort)
 
-  setupClaudeHandlers(ipcMain, mainWindow)
+  setupClaudeHandlers(ipcMain, () => mainWindow)
   setupFileHandlers(ipcMain)
   setupGitHandlers(ipcMain)
   setupUpdateHandlers(ipcMain, mainWindow)

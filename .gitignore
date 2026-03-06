@@ -12,3 +12,5 @@ data
 .env.local
 .env*.local
 *.log
+next-env.d.ts
+tsconfig.tsbuildinfo

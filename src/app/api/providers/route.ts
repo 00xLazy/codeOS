@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as db from '@/lib/db'
-import { nanoid } from 'nanoid'
 import type { ApiProvider } from '@/types'
+import { nanoid } from 'nanoid'
 
 export async function GET() {
   return NextResponse.json(db.getProviders())

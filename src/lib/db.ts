@@ -159,7 +159,7 @@ export function updateSession(id: string, data: Partial<ChatSession>): void {
     .join(', ')
   getDb()
     .prepare(`UPDATE chat_sessions SET ${fields}, updated_at = @updatedAt WHERE id = @id`)
-    .run({ ...data, updatedAt: Date.now(), id })
+    .run({ ...(data as Record<string, unknown>), updatedAt: Date.now(), id })
 }
 
 export function archiveSession(id: string): void {
@@ -342,94 +342,103 @@ export function insertCheckpoint(cp: Checkpoint): void {
 }
 
 // ── Row mappers ───────────────────────────────────────────────────────
-function rowToSession(r: Record<string, unknown>): ChatSession {
+type Row = Record<string, unknown>
+
+function rowToSession(r: unknown): ChatSession {
+  const row = r as Row
   return {
-    id: r.id as string,
-    title: r.title as string,
-    workDir: r.work_dir as string,
-    model: r.model as string,
-    mode: r.mode as ChatSession['mode'],
-    createdAt: r.created_at as number,
-    updatedAt: r.updated_at as number,
-    archived: Boolean(r.archived),
-    tokenCount: r.token_count as number,
-    cost: r.cost as number,
+    id: row.id as string,
+    title: row.title as string,
+    workDir: row.work_dir as string,
+    model: row.model as string,
+    mode: row.mode as ChatSession['mode'],
+    createdAt: row.created_at as number,
+    updatedAt: row.updated_at as number,
+    archived: Boolean(row.archived),
+    tokenCount: row.token_count as number,
+    cost: row.cost as number,
   }
 }
 
-function rowToMessage(r: Record<string, unknown>): Message {
+function rowToMessage(r: unknown): Message {
+  const row = r as Row
   return {
-    id: r.id as string,
-    sessionId: r.session_id as string,
-    role: r.role as Message['role'],
-    content: JSON.parse(r.content as string),
-    createdAt: r.created_at as number,
-    inputTokens: r.input_tokens as number | undefined,
-    outputTokens: r.output_tokens as number | undefined,
-    cacheCreationTokens: r.cache_creation_tokens as number | undefined,
-    cacheReadTokens: r.cache_read_tokens as number | undefined,
-    model: r.model as string | undefined,
+    id: row.id as string,
+    sessionId: row.session_id as string,
+    role: row.role as Message['role'],
+    content: JSON.parse(row.content as string),
+    createdAt: row.created_at as number,
+    inputTokens: row.input_tokens as number | undefined,
+    outputTokens: row.output_tokens as number | undefined,
+    cacheCreationTokens: row.cache_creation_tokens as number | undefined,
+    cacheReadTokens: row.cache_read_tokens as number | undefined,
+    model: row.model as string | undefined,
   }
 }
 
-function rowToProvider(r: Record<string, unknown>): ApiProvider {
+function rowToProvider(r: unknown): ApiProvider {
+  const row = r as Row
   return {
-    id: r.id as string,
-    name: r.name as string,
-    type: r.type as ApiProvider['type'],
-    apiKey: r.api_key as string,
-    baseUrl: r.base_url as string | undefined,
-    defaultModel: r.default_model as string | undefined,
-    isDefault: Boolean(r.is_default),
-    createdAt: r.created_at as number,
+    id: row.id as string,
+    name: row.name as string,
+    type: row.type as ApiProvider['type'],
+    apiKey: row.api_key as string,
+    baseUrl: row.base_url as string | undefined,
+    defaultModel: row.default_model as string | undefined,
+    isDefault: Boolean(row.is_default),
+    createdAt: row.created_at as number,
   }
 }
 
-function rowToSkill(r: Record<string, unknown>): Skill {
+function rowToSkill(r: unknown): Skill {
+  const row = r as Row
   return {
-    id: r.id as string,
-    name: r.name as string,
-    description: r.description as string | undefined,
-    prompt: r.prompt as string,
-    scope: r.scope as Skill['scope'],
-    projectDir: r.project_dir as string | undefined,
-    createdAt: r.created_at as number,
-    updatedAt: r.updated_at as number,
+    id: row.id as string,
+    name: row.name as string,
+    description: row.description as string | undefined,
+    prompt: row.prompt as string,
+    scope: row.scope as Skill['scope'],
+    projectDir: row.project_dir as string | undefined,
+    createdAt: row.created_at as number,
+    updatedAt: row.updated_at as number,
   }
 }
 
-function rowToMcpServer(r: Record<string, unknown>): McpServer {
+function rowToMcpServer(r: unknown): McpServer {
+  const row = r as Row
   return {
-    id: r.id as string,
-    name: r.name as string,
-    transport: r.transport as McpServer['transport'],
-    command: r.command as string | undefined,
-    args: r.args ? JSON.parse(r.args as string) : undefined,
-    url: r.url as string | undefined,
-    env: r.env ? JSON.parse(r.env as string) : undefined,
-    enabled: Boolean(r.enabled),
-    createdAt: r.created_at as number,
+    id: row.id as string,
+    name: row.name as string,
+    transport: row.transport as McpServer['transport'],
+    command: row.command as string | undefined,
+    args: row.args ? JSON.parse(row.args as string) : undefined,
+    url: row.url as string | undefined,
+    env: row.env ? JSON.parse(row.env as string) : undefined,
+    enabled: Boolean(row.enabled),
+    createdAt: row.created_at as number,
   }
 }
 
-function rowToTask(r: Record<string, unknown>): Task {
+function rowToTask(r: unknown): Task {
+  const row = r as Row
   return {
-    id: r.id as string,
-    sessionId: r.session_id as string,
-    title: r.title as string,
-    status: r.status as Task['status'],
-    createdAt: r.created_at as number,
-    updatedAt: r.updated_at as number,
+    id: row.id as string,
+    sessionId: row.session_id as string,
+    title: row.title as string,
+    status: row.status as Task['status'],
+    createdAt: row.created_at as number,
+    updatedAt: row.updated_at as number,
   }
 }
 
-function rowToCheckpoint(r: Record<string, unknown>): Checkpoint {
+function rowToCheckpoint(r: unknown): Checkpoint {
+  const row = r as Row
   return {
-    id: r.id as string,
-    sessionId: r.session_id as string,
-    messageId: r.message_id as string,
-    snapshotPath: r.snapshot_path as string,
-    createdAt: r.created_at as number,
+    id: row.id as string,
+    sessionId: row.session_id as string,
+    messageId: row.message_id as string,
+    snapshotPath: row.snapshot_path as string,
+    createdAt: row.created_at as number,
   }
 }
 

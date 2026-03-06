@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(__dirname, '..')
 
-function waitForNext(port, retries = 30) {
+function waitForServer(port, retries = 40) {
   return new Promise((resolve, reject) => {
     let tries = 0
     const check = () => {
@@ -16,8 +16,8 @@ function waitForNext(port, retries = 30) {
       }).on('error', retry)
     }
     const retry = () => {
-      if (++tries >= retries) return reject(new Error('timeout'))
-      setTimeout(check, 1000)
+      if (++tries >= retries) return reject(new Error('server timeout'))
+      setTimeout(check, 800)
     }
     check()
   })
@@ -27,17 +27,26 @@ function waitForNext(port, retries = 30) {
 console.log('Building Electron main process...')
 await import('./build-electron.mjs')
 
-// Start Next.js dev server
-console.log('Starting Next.js...')
-const next = spawn('npm', ['run', 'dev'], {
-  cwd: root,
-  stdio: 'inherit',
-  env: { ...process.env, PORT: '3000' },
+// Start Next.js standalone server
+console.log('Starting Next.js standalone server...')
+const serverScript = path.join(root, '.next', 'standalone', 'server.js')
+const nextProc = spawn(process.execPath, [serverScript], {
+  cwd: path.join(root, '.next', 'standalone'),
+  stdio: ['ignore', 'pipe', 'pipe'],
+  env: {
+    ...process.env,
+    PORT: '3000',
+    NODE_ENV: 'production',
+    HOSTNAME: '127.0.0.1',
+  },
 })
 
-// Wait for Next.js to be ready
+nextProc.stdout.on('data', (d) => process.stdout.write(d))
+nextProc.stderr.on('data', (d) => process.stderr.write(d))
+
+// Wait for server to be ready
 console.log('Waiting for Next.js...')
-await waitForNext(3000)
+await waitForServer(3000)
 console.log('Next.js ready.')
 
 // Start Electron
@@ -45,16 +54,20 @@ console.log('Starting Electron...')
 const electron = spawn('npx', ['electron', '.'], {
   cwd: root,
   stdio: 'inherit',
-  env: { ...process.env, NODE_ENV: 'development' },
+  env: {
+    ...process.env,
+    CODEOS_PORT: '3000',
+    CODEOS_DEV: '1',
+  },
 })
 
 electron.on('close', () => {
-  next.kill()
+  nextProc.kill()
   process.exit(0)
 })
 
 process.on('SIGINT', () => {
-  next.kill()
+  nextProc.kill()
   electron.kill()
   process.exit(0)
 })
